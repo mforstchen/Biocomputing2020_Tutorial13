@@ -1,59 +1,50 @@
-#Exercise 11 - Meghan Forstchen and Shaneann Fross
+#Exercise 11 Meghan Forstchen and Shaneann Fross
 
-library(ggplot2)
-
-#Set the initial parameters of the models
+#Set the parameters
 N0=1
-M0=1
+M0=0
 r=0.1
 K=1000000
-######Need to change timestep number
-timesteps=100
+timesteps=500
 
 #Create a dataframe to store output and initial values
 NS=data.frame(time=1:timesteps, sim1=rep(0,timesteps), sim2=rep(0,timesteps))
 
-
-ggplot(data=NS, aes(x=time, y=sim1))+
-  geom_line()+
-  theme_classic()
-
 NS$sim1[1]=N0
 NS$sim2[1]=M0
 
-####Need 1 population to start with not two
-#### STUCK ON Loop
-###Need to index a single number not whole 100
+
+#Run a for loop for the two cancer cell populations
+
 for(t in 2:timesteps){
-  if (NS$sim1 || NS$sim2 <100){
+  if(t<50){ ##Normal Growth -- No mutations, there is one population
     NS$sim1[t] <- NS$sim1[t-1]+r*NS$sim1[t-1]*(1-((NS$sim1[t-1]+ NS$sim2[t-1])/K))
-    NS$sim2[t] <- NS$sim2[t-1]+r*NS$sim2[t-1]*(1-((NS$sim2[t-1]+ NS$sim1[t-1])/K))  
-  }else{
-    NS$sim1[t] <- NS$sim1[t-1]+(r*NS$sim1[t-1]*(1-((NS$sim1[t-1]+ NS$sim2[t-1])/K))/2)
-    NS$sim2[t] <- NS$sim2[t-1]+(-r*NS$sim2[t-1]*(1-((NS$sim2[t-1]+ NS$sim1[t-1])/K))) 
+    NS$sim2[t] <- 0 
+  }else if (t==50){ ## Mutation occured 
+    NS$sim1[t] = 99
+    NS$sim2[t] = 1
+  }else if (t < 150){ ##Both populations grow normally
+    NS$sim1[t] <- NS$sim1[t-1]+r*NS$sim1[t-1]*(1-((NS$sim1[t-1]+ NS$sim2[t-1])/K))
+    NS$sim2[t] <- NS$sim2[t-1]+r*NS$sim2[t-1]*(1-((NS$sim2[t-1]+ NS$sim1[t-1])/K)) 
+  }else{ ## After drug treatment, non-mutant declines and mutant grows slower
+    NS$sim1[t] <- NS$sim1[t-1]+(-r*NS$sim1[t-1]*(1-((NS$sim1[t-1]+ NS$sim2[t-1])/K))) 
+    NS$sim2[t] <- NS$sim2[t-1]+(r*NS$sim2[t-1]*(1-((NS$sim2[t-1]+ NS$sim1[t-1])/K))/2)
   }
 }
-  
-  
-  
-#######TEST RUN
-for(t in 2:timesteps){
-  if (t>49){
-    NS$sim1[t] <- NS$sim1[t-1]+r*NS$sim1[t-1]*(1-((NS$sim1[t-1]+ NS$sim2[t-1])/K))
-    NS$sim2[t] <- NS$sim2[t-1]+r*NS$sim2[t-1]*(1-((NS$sim2[t-1]+ NS$sim1[t-1])/K))  
-  }else{
-    NS$sim1[t] <- NS$sim1[t-1]+(r*NS$sim1[t-1]*(1-((NS$sim1[t-1]+ NS$sim2[t-1])/K))/2)
-    NS$sim2[t] <- NS$sim2[t-1]+(-r*NS$sim2[t-1]*(1-((NS$sim2[t-1]+ NS$sim1[t-1])/K))) 
-  }
-}  
-  
-  
+
+NS1<-data.frame(time=c(NS$time), N1=c(NS$sim1), sim=rep(c("normal"), each=timesteps))
+NS2<-data.frame(time=c(NS$time), N1=c(NS$sim2), sim=rep(c("mutant"), each=timesteps))
 
 
-####Trying after stuart
+#Plot the models
+#Load ggplot library
+library(ggplot2)
 
-for(t in 2:timesteps){
-  if (NS[,2]<100){
-    NS$sim1[t] <- NS$sim1[t-1]+r*NS$sim1[t-1]*(1-(NS$sim1[t-1])/K)
-  }
-}
+ggplot()+
+  geom_line(data=NS2, aes(x=time, y=N1, color=sim))+
+  geom_line(data=NS1, aes(x=time, y=N1, color=sim))+
+  xlab("Time")+
+  ylab("Number of Cells")+
+  theme_classic()
+
+
